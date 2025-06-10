@@ -18,7 +18,7 @@ struct Combination {
         for(long long i = 1; i <= n; i++) fact_inv[i] = fact_inv[i - 1] * inv[i] % mod;
     }
     long long operator()(long long a, long long b) {
-        assert(0 <= a);
+        if(a < 0) return 0;
         if(a < b) return 0;
         if(b < 0) return 0;
         assert(a <= n);

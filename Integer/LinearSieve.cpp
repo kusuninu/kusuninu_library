@@ -67,12 +67,17 @@ struct LinearSieve {
         assert(1 <= x && x <= _N);
         auto factors = prime_factorize(x);
         std::vector<int> res = {1};
+        std::stack<int> st;
         for(auto pf: factors) {
             for(int a: res) {
                 for(int i = 0; i < pf.second; i++) {
                     a *= pf.first;
-                    res.push_back(a);
+                    st.push(a);
                 }
+            }
+            while(!st.empty()){
+                res.push_back(st.top());
+                st.pop();
             }
         }
         return res;
