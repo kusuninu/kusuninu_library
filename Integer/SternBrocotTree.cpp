@@ -13,6 +13,10 @@ template<class T = long long> struct SternBrocotTree {
         }
         std::pair<T, T> value() { return std::make_pair(p + r, q + s); }
 
+        T nume() { return p + r; }
+
+        T domi() { return q + s; }
+
         bool operator==(const Node& rhs) {
             return p == rhs.p && q == rhs.q && r == rhs.r && s == rhs.s;
         }
@@ -44,7 +48,8 @@ template<class T = long long> struct SternBrocotTree {
     }
 
     Node fraction_to_node(T a, T b) {
-        bool c = true : Node nd = root;
+        bool c = true;
+        Node nd = root;
         while(b != 0) {
             if(c) nd = nd.kright(a / b);
             if(!c) nd = nd.kleft(a / b);
@@ -61,7 +66,7 @@ template<class T = long long> struct SternBrocotTree {
         Node nd = root;
         bool flag = true;
         while(b != 0 && d != 0) {
-            T p = min((a-1) / b, (c-1) / d);
+            T p = min((a - 1) / b, (c - 1) / d);
             if(flag) nd = nd.kright(p);
             if(!flag) nd = nd.kleft(p);
             if(a / b != c / d) break;
@@ -75,5 +80,8 @@ template<class T = long long> struct SternBrocotTree {
     }
 
     //max fraction x such that F(x) = true && denominator and numerator <= N
-    template<class F> Node max_search(F f, T N) { Node nd = root; }
+    template<class F> Node max_search(F f, T N) {
+        Node nd = root;
+
+    }
 };

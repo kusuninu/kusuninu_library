@@ -68,7 +68,8 @@ template<class T> struct Matrix {
             M = pre;
     }
 
-    Matrix(int _N, int _M, T* V) {
+    template<class Ptr, std::enable_if_t<std::is_same_v<Ptr, T*>, int> = 0>
+    Matrix(int _N, int _M, const T* V) {
         assert(0 <= _N);
         assert(0 <= _M);
         N = _N;
@@ -144,7 +145,7 @@ template<class T> struct Matrix {
     }
 
     template<class U> Matrix<T>& operator*=(const U& v) {
-        for(int i = 0;i < N*M;i++) A[i] *= v;
+        for(int i = 0; i < N * M; i++) A[i] *= v;
         return *this;
     }
 
@@ -216,13 +217,11 @@ Matrix<typename std::common_type<T, U>::type> operator-(const Matrix<T>& lhs,
     return Matrix<typename std::common_type<T, U>::type>(lhs) -= rhs;
 }
 template<class T, class U>
-Matrix<typename std::common_type<T, U>::type> operator*(const Matrix<T>& lhs,
-                                                        const U& rhs) {
+Matrix<typename std::common_type<T, U>::type> operator*(const Matrix<T>& lhs, const U& rhs) {
     return Matrix<typename std::common_type<T, U>::type>(lhs) *= rhs;
 }
 template<class T, class U>
-Matrix<typename std::common_type<T, U>::type> operator*(const T& lhs,
-                                                        const Matrix<U>& rhs) {
+Matrix<typename std::common_type<T, U>::type> operator*(const T& lhs, const Matrix<U>& rhs) {
     return Matrix<typename std::common_type<T, U>::type>(rhs) *= lhs;
 }
 template<class U> std::ostream& operator<<(std::ostream& os, const Matrix<U>& A) {

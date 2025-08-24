@@ -1,114 +1,251 @@
 #include <bits/stdc++.h>
 
-struct IntegerAlgorithm
-{
-	static inline long long mod(long long a, long long m)
-	{
-		return (a % m + m) % m;
-	}
+struct IntegerAlgorithm {
+    static constexpr long long safe_mod(long long x, long long m) {
+        x %= m;
+        if(x < 0) x += m;
+        return x;
+    }
+    //from atcoder_library
+    // @param b `1 <= b`
+    // @return pair(g, x) s.t. g = gcd(a, b), xa = g (mod b), 0 <= x < b/g
+    static constexpr std::pair<long long, long long> inv_gcd(long long a, long long b) {
+        a = safe_mod(a, b);
+        if(a == 0) return {b, 0};
 
-	//O(sqrt(N)),not fast
-	static std::vector<std::pair<long long, long long>> soinsu_bunkai(long long N)
-	{
-		std::vector<std::pair<long long, long long>> res;
-		for (int i = 2; i <= sqrtl(N); i++)
-		{
-			if (N % i == 0)
-			{
-				long long p = 0;
-				while (N % i == 0)
-				{
-					N /= i;
-					p++;
-				}
-				res.emplace_back(i, p);
-			}
-		}
-		if (N != 1)
-			res.emplace_back(N, 1);
-		return res;
-	}
-	
-	
+        // Contracts:
+        // [1] s - m0 * a = 0 (mod b)
+        // [2] t - m1 * a = 0 (mod b)
+        // [3] s * |m1| + t * |m0| <= b
+        long long s = b, t = a;
+        long long m0 = 0, m1 = 1;
 
-	static long long extGCD(long long a, long long b, long long &x, long long &y)
-	{
-		if (b == 0)
-		{
-			x = 1;
-			y = 0;
-			return a;
-		}
-		long long d = extGCD(b, a % b, y, x);
-		y -= a / b * x;
-		return d;
-	}
+        while(t) {
+            long long u = s / t;
+            s -= t * u;
+            m0 -= m1 * u;// |m1 * u| <= |m1| * s <= b
 
-	static std::pair<long long, long long> ChineseRem(long long b1, long long m1, long long b2, long long m2)
-	{
-		long long p, q;
-		long long d = extGCD(m1, m2, p, q); // p is inv of m1/d (mod. m2/d)
-		if ((b2 - b1) % d != 0)
-			return std::make_pair(0, -1);
-		long long m = m1 * (m2 / d); // lcm of (m1, m2)
-		long long tmp = (b2 - b1) / d * p % (m2 / d);
-		long long r = mod(b1 + m1 * tmp, m);
-		return std::make_pair(r, m);
-	}
+            // [3]:
+            // (s - t * u) * |m1| + t * |m0 - m1 * u|
+            // <= s * |m1| - t * u * |m1| + t * (|m0| + |m1| * u)
+            // = s * |m1| + t * |m0| <= b
 
-	static std::pair<long long, long long> ChineseRem(const std::vector<long long> &b, const std::vector<long long> &m)
-	{
-		long long r = 0, M = 1;
-		for (int i = 0; i < (int)b.size(); ++i)
-		{
-			long long p, q;
-			long long d = extGCD(M, m[i], p, q); // p is inv of M/d (mod. m[i]/d)
-			if ((b[i] - r) % d != 0)
-				return std::make_pair(0, -1);
-			long long tmp = (b[i] - r) / d * p % (m[i] / d);
-			r += M * tmp;
-			M *= m[i] / d;
-		}
-		return std::make_pair(mod(r, M), M);
-	}
+            auto tmp = s;
+            s = t;
+            t = tmp;
+            tmp = m0;
+            m0 = m1;
+            m1 = tmp;
+        }
+        // by [3]: |m0| <= b/g
+        // by g != b: |m0| < b/g
+        if(m0 < 0) m0 += b / s;
+        return {s, m0};
+    }
 
-	static long long modinv(long long a, long long m)
-	{
-		long long b = m, u = 1, v = 0;
-		while (b)
-		{
-			long long t = a / b;
-			a -= t * b;
-			std::swap(a, b);
-			u -= t * v;
-			std::swap(u, v);
-		}
-		u %= m;
-		if (u < 0)
-			u += m;
-		return u;
-	}
+    //from atcoder_library
+    static long long mod_inv(long long x, long long m) {
+        assert(1 <= m);
+        auto z = inv_gcd(x, m);
+        assert(z.first == 1);
+        return z.second;
+    }
 
-	static long long modpow(long long a, long long n, long long mod)
-	{
-		long long res = 1;
-		while (n > 0)
-		{
-			if (n & 1)
-				res = res * a % mod;
-			a = a * a % mod;
-			n >>= 1;
-		}
-		return res;
-	}
+    //O(sqrt(N)),not fast
+    static std::vector<std::pair<long long, long long>> prime_factorization(long long N) {
+        std::vector<std::pair<long long, long long>> res;
+        for(int i = 2; i * i <= N; i++) {
+            if(N % i == 0) {
+                long long p = 0;
+                while(N % i == 0) {
+                    N /= i;
+                    p++;
+                }
+                res.emplace_back(i, p);
+            }
+        }
+        if(N != 1) res.emplace_back(N, 1);
+        return res;
+    }
 
-	
+    //O(sqrt(N)),not fast
+    static std::vector<long long> get_prime_factors(long long N) {
+        std::vector<long long> res;
+        long long t = N;
+        for(long long i = 2; i * i <= t; i++) {
+            if(t % i == 0) {
+                res.push_back(i);
+                while(t % i == 0) t /= i;
+            }
+            if(t == 1) break;
+        }
+        if(t != 1) res.push_back(t);
+        return res;
+    }
 
-	static long long mypow(long long a, long long p)
-	{
-		if (p == 0)
-			return 1;
-		long long b = mypow(a, p / 2);
-		return b * b * (p % 2 + 1);
-	}
+    // @return gcd(a,b)
+    static long long extGCD(long long a, long long b, long long& x, long long& y) {
+        if(b == 0) {
+            x = 1;
+            y = 0;
+            return a;
+        }
+        long long d = extGCD(b, a % b, y, x);
+        y -= a / b * x;
+        return d;
+    }
+
+    //from atcoder_library
+    // (rem, mod)
+    static std::pair<long long, long long> ChineseRemTheorem(const std::vector<long long>& r,
+                                                             const std::vector<long long>& m) {
+        assert(r.size() == m.size());
+        int n = int(r.size());
+        // Contracts: 0 <= r0 < m0
+        long long r0 = 0, m0 = 1;
+        for(int i = 0; i < n; i++) {
+            assert(1 <= m[i]);
+            long long r1 = safe_mod(r[i], m[i]), m1 = m[i];
+            if(m0 < m1) {
+                std::swap(r0, r1);
+                std::swap(m0, m1);
+            }
+            if(m0 % m1 == 0) {
+                if(r0 % m1 != r1) return {0, 0};
+                continue;
+            }
+            // assume: m0 > m1, lcm(m0, m1) >= 2 * max(m0, m1)
+
+            // (r0, m0), (r1, m1) -> (r2, m2 = lcm(m0, m1));
+            // r2 % m0 = r0
+            // r2 % m1 = r1
+            // -> (r0 + x*m0) % m1 = r1
+            // -> x*u0*g % (u1*g) = (r1 - r0) (u0*g = m0, u1*g = m1)
+            // -> x = (r1 - r0) / g * inv(u0) (mod u1)
+
+            // im = inv(u0) (mod u1) (0 <= im < u1)
+            long long g, im;
+            std::tie(g, im) = inv_gcd(m0, m1);
+
+            long long u1 = (m1 / g);
+            // |r1 - r0| < (m0 + m1) <= lcm(m0, m1)
+            if((r1 - r0) % g) return {0, 0};
+
+            // u1 * u1 <= m1 * m1 / g / g <= m0 * m1 / g = lcm(m0, m1)
+            long long x = (r1 - r0) / g % u1 * im % u1;
+
+            // |r0| + |m0 * x|
+            // < m0 + m0 * (u1 - 1)
+            // = m0 + m0 * m1 / g - m0
+            // = lcm(m0, m1)
+            r0 += x * m0;
+            m0 *= u1;// -> lcm(m0, m1)
+            if(r0 < 0) r0 += m0;
+        }
+        return {r0, m0};
+    }
+
+    static long long mod_pow(long long a, long long n, long long m) {
+        long long res = 1;
+        while(n > 0) {
+            if(n & 1) res = res * a % m;
+            a = a * a % m;
+            n >>= 1;
+        }
+        return res;
+    }
+
+    static long long integer_pow(long long a, long long n) {
+        long long res = 1;
+        while(n > 0) {
+            if(n & 1) res = res * a;
+            a = a * a;
+            n >>= 1;
+        }
+        return res;
+    }
+
+    //p must be a prime number
+    static long long get_primitive_root(long long p) {
+        if(p == 2) return 1;
+        static thread_local std::mt19937 rng(std::random_device{}());
+        std::uniform_int_distribution<long long> dist(2, p - 1);
+        std::vector<long long> soinsu = get_prime_factors(p - 1);
+        while(true) {
+            long long s = dist(rng);
+            bool ok = true;
+            for(auto a: soinsu) {
+                long long power = (p - 1) / a;
+                if(mod_pow(a, power, p) == 1) {
+                    ok = false;
+                    break;
+                }
+            }
+            if(ok) return s;
+        }
+        return -1;
+    }
+
+    //return min n s.t. f^n(x) = y & n <= M. if such n does not exist, return -1.
+    //this may return n s.t. f^n(x) = y & M < n.
+    //m should be sqrt(M)
+    template<class F>
+    static long long BabyStepGiantStep(long long x, long long y, long long M, long long m, F F_INV,
+                                       F F_M) {
+        std::unordered_set<long long, custom_hash> hash;
+        long long k = y;
+        long long fmx = x;
+        for(long long i = 0; i < m; i++) {
+            hash.insert(k);
+            k = F_INV(k);
+        }
+        for(long long i = 0; i <= M / m; i++) {
+            if(hash.count(fmx)) {
+                long long v = F_M(fmx);
+                long long res = -1;
+                for(long long j = m - 1; j >= 0; j--) {
+                    v = F_INV(v);
+                    if(v == y) res = i * m + j;
+                }
+                assert(res != -1);
+                return res;
+            }
+            fmx = F_M(fmx);
+        }
+        return -1;
+    }
+
+    //p must be a prime number
+    //return -1 if n s.t. a^n=x does not exist
+    static long long DiscreteLog(long long a, long long x, long long p) {
+        a %= p;
+        x %= p;
+        long long m = sqrtl(p);
+        while(m * m <= p) m++;
+        while(p < m * m) m--;
+        long long inv = mod_inv(a, p);
+        long long am = mod_pow(a, m, p);
+        std::function<long long(long long)> F_INV = [&](long long b) { return b * inv % p; };
+        std::function<long long(long long)> F_M = [&](long long b) { return b * am % p; };
+        long long res = BabyStepGiantStep(a, x, p - 1, m, F_INV, F_M);
+        if(res == -1) return -1;
+        return res + 1;
+    }
+
+  private:
+    struct custom_hash {
+        static uint64_t splitmix64(uint64_t x) {
+            // http://xorshift.di.unimi.it/splitmix64.c
+            x += 0x9e3779b97f4a7c15;
+            x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9;
+            x = (x ^ (x >> 27)) * 0x94d049bb133111eb;
+            return x ^ (x >> 31);
+        }
+
+        size_t operator()(uint64_t x) const {
+            static const uint64_t FIXED_RANDOM =
+                std::chrono::steady_clock::now().time_since_epoch().count();
+            return splitmix64(x + FIXED_RANDOM);
+        }
+    };
 };

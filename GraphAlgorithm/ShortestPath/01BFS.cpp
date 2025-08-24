@@ -11,7 +11,7 @@ std::vector<int> BFS01(const std::vector<std::vector<std::pair<index, index>>>& 
         int p = d.back();
         d.pop_back();
         for(auto [to, c]: G[p]) {
-            if(dis[to] != INF) continue;
+            if(dis[to] <= dis[p] + c) continue;
             if(c == 0) {
                 dis[to] = dis[p];
                 d.push_back(to);

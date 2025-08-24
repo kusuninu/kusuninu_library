@@ -10,7 +10,7 @@ template<std::integral index = int> struct Doubling {
     Doubling(const std::vector<index>& G, long long limit = std::numeric_limits<long long>::max())
         : n(G.size()), M(limit) {
         for(int i = 0; i < n; i++) assert(0 <= G[i] && G[i] < n);
-        h = 64 - std::__countly_zero(M);
+        h = 64 - std::__countl_zero(M);
         d.resize(h);
         d[0] = G;
         for(int i = 0; i < h - 1; i++) {
