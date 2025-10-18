@@ -1,7 +1,7 @@
 #pragma once
 #include <bits/stdc++.h>
 namespace kusu_lib {
-
+//from atcoder library
 template<class S, S (*op)(S, S), S (*e)()> struct SegmentTree {
   public:
     SegmentTree() : SegmentTree(0) {}

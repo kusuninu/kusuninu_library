@@ -29,7 +29,8 @@ template<class S, S (*op)(S, S), S (*e)()> struct SqrtDecomposition_group {
         }
     }
 
-    // O(1);
+    // O(1)
+    // inv is inv of v[p]
     void set(int p, S x, S inv) {
         assert(0 <= p && p < n);
         int k = p / w;

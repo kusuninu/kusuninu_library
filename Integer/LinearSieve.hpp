@@ -1,4 +1,5 @@
 #pragma once
+#include "IntegerAlgorithm.hpp"
 #include <bits/stdc++.h>
 namespace kusu_lib {
 struct LinearSieve {
@@ -40,10 +41,8 @@ struct LinearSieve {
         for(int i = 2; i <= _N; i++) {
             int k = min_factor[i];
             if(k == i) totient[i] = i - 1;
-            else if(min_factor[i / k] == k)
-                totient[i] = totient[i / k] * k;
-            else
-                totient[i] = totient[i / k] * (k - 1);
+            else if(min_factor[i / k] == k) totient[i] = totient[i / k] * k;
+            else totient[i] = totient[i / k] * (k - 1);
         }
         return totient;
     }
@@ -100,6 +99,15 @@ struct LinearSieve {
             res *= c + 1;
         }
         return res;
+    }
+
+    std::vector<long long> pow_list(long long k, long long mod) {
+        std::vector<long long> res(_N + 1);
+        for(auto p: primes) res[p] = mod_pow((long long)p, k, mod);
+        for(int i = 1; i <= _N; i++) {
+            if(res[i] == 0) res[i] = res[min_factor[i]] * res[i / min_factor[i]] % mod;
+        }
+        
     }
 
     template<class T> void sum_over_divisors(std::vector<T>& A) {

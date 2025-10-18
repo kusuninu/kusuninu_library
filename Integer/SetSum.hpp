@@ -1,6 +1,7 @@
 #pragma once
-#include <bits/stdc++.h>
 #include "StaticPolynomial.hpp"
+#include <bits/stdc++.h>
+namespace kusu_lib {
 struct SetSum {
   public:
     template<class T> static void sum_over_subset(std::vector<T>& A) {
@@ -195,9 +196,9 @@ struct SetSum {
         Hadamard_transform(C_A);
         Hadamard_transform(C_B);
         std::vector<T> C(N);
-        for(int i = 0;i < N;i++) C[i] = C_A[i] * C_B[i];
+        for(int i = 0; i < N; i++) C[i] = C_A[i] * C_B[i];
         Hadamard_transform(C);
-        for(int i = 0;i < N;i++) C[i] = divide_by_N(C[i]);
+        for(int i = 0; i < N; i++) C[i] = divide_by_N(C[i]);
         return C;
     }
 
@@ -206,7 +207,8 @@ struct SetSum {
         assert(A.size() == B.size());
         int N = A.size();
         assert(std::__popcount(N) == 1);
-        std::function<T(T)> divide_by_N = [&](T x){return x / N;};
-        return xor_convolution(A,B,divide_by_N);
+        std::function<T(T)> divide_by_N = [&](T x) { return x / N; };
+        return xor_convolution(A, B, divide_by_N);
     }
 };
+}//namespace kusu_lib

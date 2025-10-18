@@ -1,7 +1,8 @@
 #pragma once
 #include <bits/stdc++.h>
 namespace kusu_lib {
-template<class S, S (*op)(S, S), S (*e)(), S (*add_root)(S, int)> struct ReRooting {
+template<class S, S (*op)(S, S), S (*e)(), S (*add_root)(S, int)>
+struct ReRooting {
   private:
     std::vector<std::vector<int>> G;
     int N;

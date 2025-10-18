@@ -22,7 +22,7 @@ template<class S, S (*op)(S, S), S (*e)()> struct SegmentTree2D {
         d = new S[h_s * w_s * 4];
         for(int i = 0; i < h_s * w_s * 4; i++) d[i] = e();
         for(int i = 0; i < H; i++) {
-            assert(V[i].size() == W);
+            assert((int)V[i].size() == W);
             for(int j = 0; j < W; j++) d[index(i + h_s, j + w_s)] = V[i][j];
         }
         for(int i = h_s; i < h_s * 2; i++) {
@@ -87,8 +87,8 @@ template<class S, S (*op)(S, S), S (*e)()> struct SegmentTree2D {
     S* d;
     int h_s;
     int w_s;
-    int index(int h, int w) { return h * 2 * w_s + w; }
-    void w_prod(int i, int l, int r, S& res) {
+    int index(int h, int w) const{ return h * 2 * w_s + w; }
+    void w_prod(int i, int l, int r, S& res) const{
         while(l < r) {
             if(l & 1) {
                 res = op(res, d[index(i, l)]);

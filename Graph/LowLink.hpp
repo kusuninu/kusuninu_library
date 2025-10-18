@@ -1,9 +1,9 @@
 #pragma once
 #include <bits/stdc++.h>
 namespace kusu_lib {
-template<std::integral index = int> struct LowLink {
+struct LowLink {
   private:
-    const std::vector<std::vector<index>>& _G;
+    const std::vector<std::vector<int>>& _G;
     int N;
     int* ord;
     int* low;
@@ -32,7 +32,8 @@ template<std::integral index = int> struct LowLink {
                 dfs(next, n);
                 c += ord[n] <= low[next];
                 if(low[next] < low[n]) low[n] = low[next];
-            } else {
+            }
+            else {
                 if(ord[next] < low[n]) low[n] = ord[next];
             }
         }
@@ -80,7 +81,7 @@ template<std::integral index = int> struct LowLink {
     }
 
   public:
-    LowLink(const std::vector<std::vector<index>>& G) : _G(G) {
+    LowLink(const std::vector<std::vector<int>>& G) : _G(G) {
         N = G.size();
         ord = new int[N];
         low = new int[N];

@@ -50,4 +50,48 @@ struct Combination {
         return _fact_inv[a];
     }
 };
+
+template<std::size_t N, long long MOD> struct CombinationStatic {
+  private:
+    std::array<long long, N + 1> _inv{};
+    std::array<long long, N + 1> _fact{};
+    std::array<long long, N + 1> _fact_inv{};
+
+  public:
+    constexpr CombinationStatic() {
+        if constexpr(N >= 1) _inv[1] = 1;
+        _fact[0] = 1;
+        _fact_inv[0] = 1;
+        for(std::size_t i = 2; i <= N; i++) _inv[i] = MOD - (MOD / i) * _inv[MOD % i] % MOD;
+        for(std::size_t i = 1; i <= N; i++) _fact[i] = _fact[i - 1] * i % MOD;
+        for(std::size_t i = 1; i <= N; i++) _fact_inv[i] = _fact_inv[i - 1] * _inv[i] % MOD;
+    }
+
+    constexpr long long operator()(long long a, long long b) const {
+        if(a < 0 || b < 0 || a < b) return 0;
+        assert(a <= (long long)N);
+        return _fact[a] * _fact_inv[b] % MOD * _fact_inv[a - b] % MOD;
+    }
+
+    constexpr long long P(long long a, long long b) const {
+        if(a < 0 || b < 0 || a < b) return 0;
+        assert(a <= (long long)N);
+        return _fact[a] * _fact_inv[a - b] % MOD;
+    }
+
+    constexpr long long fact(long long a) const {
+        assert(0 <= a && a <= (long long)N);
+        return _fact[a];
+    }
+
+    constexpr long long inv(long long a) const {
+        assert(1 <= a && a <= (long long)N);
+        return _inv[a];
+    }
+
+    constexpr long long fact_inv(long long a) const {
+        assert(0 <= a && a <= (long long)N);
+        return _fact_inv[a];
+    }
+};
 }//namespace kusu_lib

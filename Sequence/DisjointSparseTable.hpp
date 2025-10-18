@@ -46,6 +46,24 @@ template<class S, S (*op)(S, S), S (*e)()> struct DisjointSparseTable {
         return op(T[p * N + l], T[p * N + r]);
     }
 
+    S prod_left(int l, int r){
+        assert(0 <= l && l <= r && r <= N);
+        if(l == r) return e();
+        if(l + 1 == r) return _v[l];
+        r--;
+        int p = 30 - std::__countl_zero(l ^ r);
+        return T[p * N + l];
+    }
+
+    S prod_right(int l, int r){
+        assert(0 <= l && l <= r && r <= N);
+        if(l == r) return e();
+        if(l + 1 == r) return e();
+        r--;
+        int p = 30 - std::__countl_zero(l ^ r);
+        return T[p * N + r];
+    }
+
     int size() { return N; }
 };
 }//namespace kusu_lib

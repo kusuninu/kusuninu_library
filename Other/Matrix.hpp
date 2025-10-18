@@ -15,7 +15,7 @@ template<class T> struct Matrix {
     //X is n*m matrix and Y is m*l matrix;result of X*Y that is n*l is in Z
     //memory alloc must have been done
     static void fast_mul(int n, int m, int l, const T X[], const T Y[], T Z[]) {
-        for(int i = 0; i < n * l; i++) Z[i] = 0;
+        for(int i = 0; i < n * l; i++) Z[i] = T();
         for(int i = 0; i < n; i++) {
             for(int k = 0; k < m; k++) {
                 for(int j = 0; j < l; j++) { Z[i * l + j] += X[i * m + k] * Y[k * l + j]; }
@@ -39,7 +39,9 @@ template<class T> struct Matrix {
     };
 
   public:
-    Matrix(int _N, int _M) : Matrix(_N, _M, (T)0) {}
+    Matrix() : N(0), M(0) {}
+
+    Matrix(int _N, int _M) : Matrix(_N, _M, T()) {}
 
     Matrix(int _N, int _M, T c) {
         assert(0 <= _N);
@@ -66,12 +68,12 @@ template<class T> struct Matrix {
             }
         N = V.size();
         if(pre == -1) M = 0;
-        else
-            M = pre;
+        else M = pre;
     }
 
-    template<class Ptr, std::enable_if_t<std::is_same_v<Ptr, T*>, int> = 0>
-    Matrix(int _N, int _M, const T* V) {
+    template<typename U>
+    requires std::same_as<U, T>
+    Matrix(int _N, int _M, const U V[]) {
         assert(0 <= _N);
         assert(0 <= _M);
         N = _N;
@@ -116,50 +118,50 @@ template<class T> struct Matrix {
         return A[i * M + j];
     }
 
-    static Matrix Identity_Matrix(int n) {
-        Matrix<T> B(n, n, 0);
+    static Matrix<T> Identity_Matrix(int n) {
+        Matrix<T> B(n, n, T());
         for(int i = 0; i < n; i++) B.set(i, i, 1);
         return B;
     }
 
-    static Matrix Zero_Matrix(int n) { return Matrix<T>(n, n, 0); }
+    static Matrix<T> Zero_Matrix(int n) { return Matrix<T>(n, n, T()); }
 
     void clear_row(int i) {
         assert(0 <= i && i < N);
-        for(int j = 0; j < M; j++) A[i * M + j] = 0;
+        for(int j = 0; j < M; j++) A[i * M + j] = T();
     }
 
     void clear_column(int i) {
         assert(0 <= i && i < M);
-        for(int j = 0; j < N; j++) A[j * M + i] = 0;
+        for(int j = 0; j < N; j++) A[j * M + i] = T();
     }
 
-    template<class U> Matrix<T>& operator+=(const Matrix<U>& B) {
+    template<std::convertible_to<T> U> Matrix<T>& operator+=(const Matrix<U>& B) {
         assert(N == B.N && M == B.M);
         for(int i = 0; i < N * M; i++) A[i] += B.A[i];
         return *this;
     }
 
-    template<class U> Matrix<T>& operator-=(const Matrix<U>& B) {
+    template<std::convertible_to<T> U> Matrix<T>& operator-=(const Matrix<U>& B) {
         assert(N == B.N && M == B.M);
         for(int i = 0; i < N * M; i++) A[i] -= B.A[i];
         return *this;
     }
 
-    template<class U> Matrix<T>& operator*=(const U& v) {
+    template<std::convertible_to<T> U> Matrix<T>& operator*=(const U& v) {
         for(int i = 0; i < N * M; i++) A[i] *= v;
         return *this;
     }
 
-    Matrix operator*(const Matrix<T>& B) const {
+    template<std::convertible_to<T> U> Matrix<T> operator*(const Matrix<U>& B) const {
         assert(M == B.height());
         int W = B.width();
         T C[N * W];
         fast_mul(N, M, W, A, B.A, C);
-        return Matrix(N, W, C);
+        return Matrix<T>(N, W, C);
     }
 
-    Matrix pow(long long n) const {
+    Matrix<T> pow(long long n) const {
         assert(0 <= n);
         assert(N == M);
         if(!pow_initialized) {
@@ -177,54 +179,51 @@ template<class T> struct Matrix {
             if(n & 1) {
                 if(k) {
                     if(l) fast_mul(N, N, N, temp2, temp4, temp1);
-                    else
-                        fast_mul(N, N, N, temp1, temp4, temp2);
-                } else {
+                    else fast_mul(N, N, N, temp1, temp4, temp2);
+                }
+                else {
                     if(l) fast_mul(N, N, N, temp2, temp3, temp1);
-                    else
-                        fast_mul(N, N, N, temp1, temp3, temp2);
+                    else fast_mul(N, N, N, temp1, temp3, temp2);
                 }
                 l ^= 1;
             }
 
             if(k) fast_mul(N, N, N, temp4, temp4, temp3);
-            else
-                fast_mul(N, N, N, temp3, temp3, temp4);
+            else fast_mul(N, N, N, temp3, temp3, temp4);
             n >>= 1;
             k ^= 1;
         }
-        if(l) {
-            return Matrix(N, N, temp2);
-        } else {
-            return Matrix(N, N, temp1);
-        }
+        if(l) { return Matrix<T>(N, N, temp2); }
+        else { return Matrix<T>(N, N, temp1); }
     }
 
     Matrix<T> Transpose() {
-        Matrix<T> B(M, N, 0);
+        Matrix<T> B(M, N, T());
         for(int i = 0; i < N; i++) {
             for(int j = 0; j < M; j++) { B.set(j, i, A[i * M + j]); }
         }
         return B;
     }
 };
+
 template<class T, class U>
-Matrix<typename std::common_type<T, U>::type> operator+(const Matrix<T>& lhs,
-                                                        const Matrix<U>& rhs) {
-    return Matrix<typename std::common_type<T, U>::type>(lhs) += rhs;
+Matrix<std::common_type_t<T, U>> operator+(const Matrix<T>& lhs, const Matrix<U>& rhs) {
+    return Matrix<std::common_type_t<T, U>>(lhs) += rhs;
 }
+
 template<class T, class U>
-Matrix<typename std::common_type<T, U>::type> operator-(const Matrix<T>& lhs,
-                                                        const Matrix<U>& rhs) {
-    return Matrix<typename std::common_type<T, U>::type>(lhs) -= rhs;
+Matrix<std::common_type_t<T, U>> operator-(const Matrix<T>& lhs, const Matrix<U>& rhs) {
+    return Matrix<std::common_type_t<T, U>>(lhs) -= rhs;
 }
+
 template<class T, class U>
-Matrix<typename std::common_type<T, U>::type> operator*(const Matrix<T>& lhs, const U& rhs) {
-    return Matrix<typename std::common_type<T, U>::type>(lhs) *= rhs;
+Matrix<std::common_type_t<T, U>> operator*(const Matrix<T>& lhs, const U& rhs) {
+    return Matrix<std::common_type_t<T, U>>(lhs) *= rhs;
 }
+
 template<class T, class U>
-Matrix<typename std::common_type<T, U>::type> operator*(const T& lhs, const Matrix<U>& rhs) {
-    return Matrix<typename std::common_type<T, U>::type>(rhs) *= lhs;
+Matrix<std::common_type_t<T, U>> operator*(const T& lhs, const Matrix<U>& rhs) {
+    return Matrix<std::common_type_t<T, U>>(rhs) *= lhs;
 }
 template<class U> std::ostream& operator<<(std::ostream& os, const Matrix<U>& A) {
     for(int i = 0; i < A.height() * A.width(); i++)
