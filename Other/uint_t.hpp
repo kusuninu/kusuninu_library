@@ -3,6 +3,19 @@
 #include "int128.hpp"
 
 namespace kusu_lib {
+
+template<int Bits>
+class int_t;
+
+template<typename T>
+struct is_int_t : std::false_type {};
+
+template<int M>
+struct is_int_t<int_t<M>> : std::true_type {};
+
+template<class T>
+inline constexpr bool is_int_t_v = is_int_t<T>::value;
+
 #pragma pack(push, 1)
 template<int Bits>
 struct uint_type_picker {
@@ -31,20 +44,21 @@ struct uint_type_picker {
                                std::conditional_t<Bits <= 64, uint64_t, __uint128_t>>>>;
 };
 
-template<int Bits>
+template<int Bits, class Derived = void>
 class uint_t;
 
 template<typename T>
 struct is_uint_t : std::false_type {};
 
-template<int M>
-struct is_uint_t<uint_t<M>> : std::true_type {};
+template<int Bits, class Derived>
+struct is_uint_t<uint_t<Bits,Derived>> : std::true_type {};
 
 template<class T>
 inline constexpr bool is_uint_t_v = is_uint_t<T>::value;
 
-template<int Bits>
+template<int Bits, class Derived = void>
 class uint_t {
+  protected:
     // do not set Bits 0
     static_assert(0 <= Bits && Bits <= 128);
 
@@ -52,6 +66,8 @@ class uint_t {
     using LowType = typename picker::LowType;
     using HighType = typename picker::HighType;
     using CalcType = typename picker::CalcType;
+
+    using DerivedType = std::conditional_t<std::is_void_v<Derived>, uint_t<Bits>, Derived>;
 
     LowType low{};
     std::conditional_t<std::is_void_v<HighType>, char, HighType> high{};
@@ -63,9 +79,9 @@ class uint_t {
     constexpr uint_t(T val) noexcept : uint_t(static_cast<CalcType>(val)) {}
 
     template<std::integral T>
-    requires (!is_uint_t_v<T>)
+    requires(!is_uint_t_v<T>)
     constexpr uint_t(T val) noexcept {
-        using U = std::make_unsigned_t<T>;
+        using U = std::make_unsigned_t<CalcType>;
         U uval = static_cast<U>(val);
         low = static_cast<LowType>(uval);
         constexpr int bits_of_uval = sizeof(U) * 8;
@@ -87,7 +103,23 @@ class uint_t {
         return static_cast<T>(to_calc());
     }
 
-    constexpr uint_t& operator++() noexcept {
+    constexpr DerivedType operator+() const { return *this; }
+
+    constexpr DerivedType operator-() const {
+        uint_t res;
+
+        if constexpr(!std::is_void_v<HighType>) {
+            res.high = ~high;
+            res.low = ~low;
+            ++res;
+            return res;
+        }
+        res.low = ~low;
+        ++res;
+        return res;
+    }
+
+    constexpr DerivedType& operator++() noexcept {
         if constexpr(std::is_void_v<HighType>) { ++low; }
         else {
             if(++low == 0) ++high;
@@ -95,13 +127,13 @@ class uint_t {
         return *this;
     }
 
-    constexpr uint_t operator++(int) noexcept {
+    constexpr DerivedType operator++(int) noexcept {
         uint_t tmp = *this;
         ++(*this);
         return tmp;
     }
 
-    constexpr uint_t& operator--() noexcept {
+    constexpr DerivedType& operator--() noexcept {
         if constexpr(std::is_void_v<HighType>) { --low; }
         else {
             if(low-- == 0) --high;
@@ -109,14 +141,15 @@ class uint_t {
         return *this;
     }
 
-    constexpr uint_t operator--(int) noexcept {
+    constexpr DerivedType operator--(int) noexcept {
         uint_t tmp = *this;
         --(*this);
         return tmp;
     }
 
     template<typename T>
-    constexpr uint_t& operator+=(const T& rhs) noexcept {
+    constexpr DerivedType& operator+=(const T& rhs) noexcept {
+        if(rhs < 0) return *this -= -rhs;
         if constexpr(std::is_same_v<std::decay_t<T>, uint_t<Bits>>) {
             if constexpr(std::is_void_v<HighType>) { low += rhs.low; }
             else {
@@ -153,7 +186,8 @@ class uint_t {
     }
 
     template<class T>
-    constexpr uint_t& operator-=(const T& rhs) noexcept {
+    constexpr DerivedType& operator-=(const T& rhs) noexcept {
+        if(rhs < 0) *this += -rhs;
         if constexpr(std::is_same_v<std::decay_t<T>, uint_t<Bits>>) {
             if constexpr(std::is_void_v<HighType>) { low -= rhs.low; }
             else {
@@ -186,28 +220,28 @@ class uint_t {
     }
 
     template<class T>
-    constexpr uint_t& operator*=(const T& rhs) noexcept {
+    constexpr DerivedType& operator*=(const T& rhs) noexcept {
         CalcType res = to_calc() * static_cast<CalcType>(rhs);
         *this = uint_t(res & ((CalcType(1) << Bits) - 1));
         return *this;
     }
 
     template<class T>
-    constexpr uint_t& operator/=(const T& rhs) noexcept {
+    constexpr DerivedType& operator/=(const T& rhs) noexcept {
         CalcType res = to_calc() / static_cast<CalcType>(rhs);
         *this = uint_t(res);
         return *this;
     }
 
     template<class T>
-    constexpr uint_t& operator%=(const T& rhs) noexcept {
+    constexpr DerivedType& operator%=(const T& rhs) noexcept {
         CalcType res = to_calc() % static_cast<CalcType>(rhs);
         *this = uint_t(res);
         return *this;
     }
 
     template<class T>
-    constexpr uint_t& operator&=(const T& rhs) noexcept {
+    constexpr DerivedType& operator&=(const T& rhs) noexcept {
         if constexpr(std::is_same_v<std::decay_t<T>, uint_t<Bits>>) {
             low &= rhs.low;
             if constexpr(!std::is_void_v<HighType>) high &= rhs.high;
@@ -226,7 +260,7 @@ class uint_t {
     }
 
     template<class T>
-    constexpr uint_t& operator|=(const T& rhs) noexcept {
+    constexpr DerivedType& operator|=(const T& rhs) noexcept {
         if constexpr(std::is_same_v<std::decay_t<T>, uint_t<Bits>>) {
             low |= rhs.low;
             if constexpr(!std::is_void_v<HighType>) high |= rhs.high;
@@ -245,7 +279,7 @@ class uint_t {
     }
 
     template<class T>
-    constexpr uint_t& operator^=(const T& rhs) noexcept {
+    constexpr DerivedType& operator^=(const T& rhs) noexcept {
         if constexpr(std::is_same_v<std::decay_t<T>, uint_t<Bits>>) {
             low ^= rhs.low;
             if constexpr(!std::is_void_v<HighType>) high ^= rhs.high;
@@ -263,20 +297,21 @@ class uint_t {
         return *this;
     }
 
-    constexpr uint_t& operator<<=(int shift) noexcept {
+    constexpr DerivedType& operator<<=(int shift) noexcept {
         CalcType res = this->to_calc() << shift;
         *this = uint_t(res & ((CalcType(1) << Bits) - 1));
         return *this;
     }
 
-    constexpr uint_t& operator>>=(int shift) noexcept {
+    constexpr DerivedType& operator>>=(int shift) noexcept {
         CalcType res = this->to_calc() >> shift;
         *this = uint_t(res);
         return *this;
     }
 
     template<typename L, typename R>
-    friend uint_t operator+(const L& lhs, const R& rhs) noexcept {
+    requires(!is_int_t_v<L> || !is_int_t_v<R>)
+    friend DerivedType operator+(const L& lhs, const R& rhs) noexcept {
         uint_t result(lhs);
         result += rhs;
         return result;
@@ -286,7 +321,8 @@ class uint_t {
     friend constexpr auto operator+(const uint_t<LBits>& lhs, const uint_t<RBits>& rhs) noexcept;
 
     template<typename L, typename R>
-    friend uint_t operator-(const L& lhs, const R& rhs) noexcept {
+    requires(!is_int_t_v<L> || !is_int_t_v<R>)
+    friend DerivedType operator-(const L& lhs, const R& rhs) noexcept {
         uint_t result(lhs);
         result -= rhs;
         return result;
@@ -296,7 +332,8 @@ class uint_t {
     friend constexpr auto operator-(const uint_t<LBits>& lhs, const uint_t<RBits>& rhs) noexcept;
 
     template<typename L, typename R>
-    friend uint_t operator*(const L& lhs, const R& rhs) noexcept {
+    requires(!is_int_t_v<L> || !is_int_t_v<R>)
+    friend DerivedType operator*(const L& lhs, const R& rhs) noexcept {
         uint_t result(lhs);
         result *= rhs;
         return result;
@@ -306,7 +343,8 @@ class uint_t {
     friend constexpr auto operator*(const uint_t<LBits>& lhs, const uint_t<RBits>& rhs) noexcept;
 
     template<typename L, typename R>
-    friend uint_t operator/(const L& lhs, const R& rhs) noexcept {
+    requires(!is_int_t_v<L> || !is_int_t_v<R>)
+    friend DerivedType operator/(const L& lhs, const R& rhs) noexcept {
         uint_t result(lhs);
         result /= rhs;
         return result;
@@ -316,7 +354,8 @@ class uint_t {
     friend constexpr auto operator/(const uint_t<LBits>& lhs, const uint_t<RBits>& rhs) noexcept;
 
     template<typename L, typename R>
-    friend uint_t operator%(const L& lhs, const R& rhs) noexcept {
+    requires(!is_int_t_v<L> || !is_int_t_v<R>)
+    friend DerivedType operator%(const L& lhs, const R& rhs) noexcept {
         uint_t result(lhs);
         result %= rhs;
         return result;
@@ -326,7 +365,8 @@ class uint_t {
     friend constexpr auto operator%(const uint_t<LBits>& lhs, const uint_t<RBits>& rhs) noexcept;
 
     template<typename L, typename R>
-    friend uint_t operator&(const L& lhs, const R& rhs) noexcept {
+    requires(!is_int_t_v<L> || !is_int_t_v<R>)
+    friend DerivedType operator&(const L& lhs, const R& rhs) noexcept {
         uint_t result(lhs);
         result &= rhs;
         return result;
@@ -336,7 +376,8 @@ class uint_t {
     friend constexpr auto operator&(const uint_t<LBits>& lhs, const uint_t<RBits>& rhs) noexcept;
 
     template<typename L, typename R>
-    friend uint_t operator|(const L& lhs, const R& rhs) noexcept {
+    requires(!is_int_t_v<L> || !is_int_t_v<R>)
+    friend DerivedType operator|(const L& lhs, const R& rhs) noexcept {
         uint_t result(lhs);
         result |= rhs;
         return result;
@@ -346,7 +387,8 @@ class uint_t {
     friend constexpr auto operator|(const uint_t<LBits>& lhs, const uint_t<RBits>& rhs) noexcept;
 
     template<typename L, typename R>
-    friend uint_t operator^(const L& lhs, const R& rhs) noexcept {
+    requires(!is_int_t_v<L> && !is_int_t_v<R>)
+    friend DerivedType operator^(const L& lhs, const R& rhs) noexcept {
         uint_t result(lhs);
         result ^= rhs;
         return result;
@@ -355,12 +397,12 @@ class uint_t {
     template<int LBits, int RBits>
     friend constexpr auto operator^(const uint_t<LBits>& lhs, const uint_t<RBits>& rhs) noexcept;
 
-    friend constexpr uint_t operator<<(uint_t lhs, int shift) noexcept {
+    friend constexpr DerivedType operator<<(uint_t lhs, int shift) noexcept {
         lhs <<= shift;
         return lhs;
     }
 
-    friend constexpr uint_t operator>>(uint_t lhs, int shift) noexcept {
+    friend constexpr DerivedType operator>>(uint_t lhs, int shift) noexcept {
         lhs >>= shift;
         return lhs;
     }
@@ -406,73 +448,79 @@ class uint_t {
 };
 #pragma pack(pop)
 
-template<int LBits, int RBits>
-constexpr auto operator+(const uint_t<LBits>& lhs, const uint_t<RBits>& rhs) noexcept {
-    constexpr int ResultBits = (LBits > RBits) ? LBits : RBits;
-    using ResultType = uint_t<ResultBits>;
+template<typename L, typename R>
+struct result_type_picker;
+
+template<int LBits, typename LDer, int RBits, typename RDer>
+struct result_type_picker<uint_t<LBits, LDer>, uint_t<RBits, RDer>> {
+    static constexpr int ResultBits = (LBits > RBits) ? LBits : RBits;
+    using type = std::conditional_t<
+        !std::is_void_v<LDer> || !std::is_void_v<RDer>,
+        int_t<ResultBits>, uint_t<ResultBits>>;
+};
+
+template<typename L, typename R>
+using result_type_t = typename result_type_picker<L, R>::type;
+
+template<int LBits, typename LDer, int RBits, typename RDer>
+constexpr auto operator+(const uint_t<LBits, LDer>& lhs, const uint_t<RBits, RDer>& rhs) noexcept {
+    using ResultType = result_type_t<uint_t<LBits, LDer>, uint_t<RBits, RDer>>;
     ResultType result(lhs);
     result += rhs;
     return result;
 }
 
-template<int LBits, int RBits>
-constexpr auto operator-(const uint_t<LBits>& lhs, const uint_t<RBits>& rhs) noexcept {
-    constexpr int ResultBits = (LBits > RBits) ? LBits : RBits;
-    using ResultType = uint_t<ResultBits>;
+template<int LBits, typename LDer, int RBits, typename RDer>
+constexpr auto operator-(const uint_t<LBits, LDer>& lhs, const uint_t<RBits, RDer>& rhs) noexcept {
+    using ResultType = result_type_t<uint_t<LBits, LDer>, uint_t<RBits, RDer>>;
     ResultType result(lhs);
     result -= rhs;
     return result;
 }
 
-template<int LBits, int RBits>
-constexpr auto operator*(const uint_t<LBits>& lhs, const uint_t<RBits>& rhs) noexcept {
-    constexpr int ResultBits = (LBits > RBits) ? LBits : RBits;
-    using ResultType = uint_t<ResultBits>;
+template<int LBits, typename LDer, int RBits, typename RDer>
+constexpr auto operator*(const uint_t<LBits, LDer>& lhs, const uint_t<RBits, RDer>& rhs) noexcept {
+    using ResultType = result_type_t<uint_t<LBits, LDer>, uint_t<RBits, RDer>>;
     ResultType result(lhs);
     result *= rhs;
     return result;
 }
 
-template<int LBits, int RBits>
-constexpr auto operator/(const uint_t<LBits>& lhs, const uint_t<RBits>& rhs) noexcept {
-    constexpr int ResultBits = (LBits > RBits) ? LBits : RBits;
-    using ResultType = uint_t<ResultBits>;
+template<int LBits, typename LDer, int RBits, typename RDer>
+constexpr auto operator/(const uint_t<LBits, LDer>& lhs, const uint_t<RBits, RDer>& rhs) noexcept {
+    using ResultType = result_type_t<uint_t<LBits, LDer>, uint_t<RBits, RDer>>;
     ResultType result(lhs);
     result /= rhs;
     return result;
 }
 
-template<int LBits, int RBits>
-constexpr auto operator%(const uint_t<LBits>& lhs, const uint_t<RBits>& rhs) noexcept {
-    constexpr int ResultBits = (LBits > RBits) ? LBits : RBits;
-    using ResultType = uint_t<ResultBits>;
+template<int LBits, typename LDer, int RBits, typename RDer>
+constexpr auto operator%(const uint_t<LBits, LDer>& lhs, const uint_t<RBits, RDer>& rhs) noexcept {
+    using ResultType = result_type_t<uint_t<LBits, LDer>, uint_t<RBits, RDer>>;
     ResultType result(lhs);
     result %= rhs;
     return result;
 }
 
-template<int LBits, int RBits>
-constexpr auto operator&(const uint_t<LBits>& lhs, const uint_t<RBits>& rhs) noexcept {
-    constexpr int ResultBits = (LBits > RBits) ? LBits : RBits;
-    using ResultType = uint_t<ResultBits>;
+template<int LBits, typename LDer, int RBits, typename RDer>
+constexpr auto operator&(const uint_t<LBits, LDer>& lhs, const uint_t<RBits, RDer>& rhs) noexcept {
+    using ResultType = result_type_t<uint_t<LBits, LDer>, uint_t<RBits, RDer>>;
     ResultType result(lhs);
     result &= rhs;
     return result;
 }
 
-template<int LBits, int RBits>
-constexpr auto operator|(const uint_t<LBits>& lhs, const uint_t<RBits>& rhs) noexcept {
-    constexpr int ResultBits = (LBits > RBits) ? LBits : RBits;
-    using ResultType = uint_t<ResultBits>;
+template<int LBits, typename LDer, int RBits, typename RDer>
+constexpr auto operator|(const uint_t<LBits, LDer>& lhs, const uint_t<RBits, RDer>& rhs) noexcept {
+    using ResultType = result_type_t<uint_t<LBits, LDer>, uint_t<RBits, RDer>>;
     ResultType result(lhs);
     result |= rhs;
     return result;
 }
 
-template<int LBits, int RBits>
-constexpr auto operator^(const uint_t<LBits>& lhs, const uint_t<RBits>& rhs) noexcept {
-    constexpr int ResultBits = (LBits > RBits) ? LBits : RBits;
-    using ResultType = uint_t<ResultBits>;
+template<int LBits, typename LDer, int RBits, typename RDer>
+constexpr auto operator^(const uint_t<LBits, LDer>& lhs, const uint_t<RBits, RDer>& rhs) noexcept {
+    using ResultType = result_type_t<uint_t<LBits, LDer>, uint_t<RBits, RDer>>;
     ResultType result(lhs);
     result ^= rhs;
     return result;

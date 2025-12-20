@@ -7,9 +7,6 @@
 #include "kusu_lib/Graph/ShortestPath/BFS.hpp"
 #include "kusu_lib/Graph/ShortestPath/Bellman_Ford.hpp"
 #include "kusu_lib/Graph/ShortestPath/Dijkstra.hpp"
-#include "kusu_lib/Graph/ShortestPath/MultiSource01BFS.hpp"
-#include "kusu_lib/Graph/ShortestPath/MultiSourceBFS.hpp"
-#include "kusu_lib/Graph/ShortestPath/MultiSourceDijkstra.hpp"
 #include "kusu_lib/Graph/ShortestPath/Warshall_Floyd.hpp"
 
 #include "kusu_lib/Graph/TreeAlgorithm/DSU.hpp"
@@ -51,8 +48,8 @@
 
 #include "kusu_lib/Other/ConvexHullTrick.hpp"
 #include "kusu_lib/Other/Coodrinate_Compression.hpp"
-#include "kusu_lib/Other/Matrix.hpp"
+#include "kusu_lib/Algebra/Matrix.hpp"
 #include "kusu_lib/Other/Mo_Algorithm.hpp"
 #include "kusu_lib/Other/Timer.hpp"
 #include "kusu_lib/Other/custom_hash.hpp"
-#include "kusu_lib/Other/fraction.hpp"
+#include "kusu_lib/Algebra/fraction.hpp"
