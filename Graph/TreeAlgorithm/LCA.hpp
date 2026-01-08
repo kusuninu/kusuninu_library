@@ -36,9 +36,9 @@ struct LCA {
         v = d.move(v, depth[v] - depth[u]);
         if(u == v) return u;
         for(int i = d.height() - 1; i >= 0; i--) {
-            if(d.move_2p(i,u) != d.move_2p(i,v)) {
-                u = d.move_2p(i,u);
-                v = d.move_2p(i,v);
+            if(d.move_2p(u,i) != d.move_2p(v,i)) {
+                u = d.move_2p(u,i);
+                v = d.move_2p(v,i);
             }
         }
         return parent[u];
