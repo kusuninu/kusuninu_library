@@ -9,7 +9,7 @@ namespace kusu_lib {
 template<int K>
 std::vector<std::array<std::pair<int, int>, K>> KthNearestBFS(const std::vector<std::vector<int>>& G,
                                                               int s = 0) {
-    const long long INF = std::numeric_limits<int>::max();
+    const long long INF = std::numeric_limits<int>::max() / 2;
     int N = G.size();
     std::queue<std::tuple<int, int, int>> q;//dist, pos, from
     q.emplace(0, s, s);
@@ -42,7 +42,7 @@ std::vector<std::array<std::pair<int, int>, K>> KthNearestBFS(const std::vector<
 template<int K>
 std::vector<std::array<std::pair<int, int>, K>> KthNearestBFS(const std::vector<std::vector<int>>& G,
                                                               const std::vector<int>& sources) {
-    const long long INF = std::numeric_limits<int>::max();
+    const long long INF = std::numeric_limits<int>::max() / 2;
     int N = G.size();
     std::queue<std::tuple<int, int, int>> q;//dist, pos, from
     std::vector<std::array<std::pair<int, int>, K>> dis(N);//dist, from

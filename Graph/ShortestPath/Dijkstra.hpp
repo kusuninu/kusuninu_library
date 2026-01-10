@@ -4,7 +4,7 @@ namespace kusu_lib {
 template<class dist = long long>
 std::vector<dist> Dijkstra(const std::vector<std::vector<std::pair<int, dist>>>& G, int s = 0) {
     using pp = std::pair<dist, int>;
-    const auto INF = std::numeric_limits<dist>::max();
+    const auto INF = std::numeric_limits<dist>::max() / 2;
     int N = G.size();
     std::vector<dist> dis(N, INF);
     dis[s] = 0;
@@ -30,7 +30,7 @@ template<class dist = long long>
 std::vector<dist> Dijkstra(const std::vector<std::vector<std::pair<int, dist>>>& G,
                            const std::vector<int>& sources) {
     using pp = std::pair<dist, int>;
-    const auto INF = std::numeric_limits<dist>::max();
+    const auto INF = std::numeric_limits<dist>::max() / 2;
     int N = G.size();
     std::vector<dist> dis(N, INF);
     std::vector<pp> make_pq(sources.size());

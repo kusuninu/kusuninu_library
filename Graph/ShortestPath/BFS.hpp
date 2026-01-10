@@ -2,7 +2,7 @@
 #include <bits/stdc++.h>
 namespace kusu_lib {
 std::vector<int> BFS(const std::vector<std::vector<int>>& G, int s = 0) {
-    const long long INF = std::numeric_limits<int>::max();
+    const int INF = std::numeric_limits<int>::max() / 2;
     int N = G.size();
     std::queue<int> q;
     q.push(s);
@@ -22,7 +22,7 @@ std::vector<int> BFS(const std::vector<std::vector<int>>& G, int s = 0) {
 
 std::vector<int> BFS(const std::vector<std::vector<int>>& G,
                                 const std::vector<int>& sources) {
-    const long long INF = std::numeric_limits<int>::max();
+    const int INF = std::numeric_limits<int>::max() / 2;
     int N = G.size();
     std::queue<int> q;
     std::vector<int> dis(N, INF);
