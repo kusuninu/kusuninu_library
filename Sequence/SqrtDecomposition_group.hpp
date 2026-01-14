@@ -1,15 +1,17 @@
 #pragma once
 #include <bits/stdc++.h>
+#include "kusu_lib/concepts.hpp"
 namespace kusu_lib {
 //inv(op(x,y),y) = x
-template<class S, S (*op)(S, S), S (*e)()> struct SqrtDecomposition_group {
+template<class S, auto op, auto e>
+requires Monoid<S, op, e>
+struct SqrtDecomposition_group {
   public:
     SqrtDecomposition_group() : SqrtDecomposition_group(1) {}
 
     SqrtDecomposition_group(int N) : SqrtDecomposition_group(std::vector<S>(N, e())) {}
 
-    SqrtDecomposition_group(int N, int width)
-        : SqrtDecomposition_group(std::vector<S>(N, e()), width) {}
+    SqrtDecomposition_group(int N, int width) : SqrtDecomposition_group(std::vector<S>(N, e()), width) {}
 
     SqrtDecomposition_group(const std::vector<S>& V)
         : SqrtDecomposition_group(V, [&]() {

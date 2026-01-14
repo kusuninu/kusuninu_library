@@ -1,7 +1,9 @@
 #pragma once
 #include <bits/stdc++.h>
+#include "kusu_lib/concepts.hpp"
 namespace kusu_lib {
-template<class S, class F, S (*mapping)(F, S), F (*composition)(F, F), F (*id)()>
+template<class S, class F, auto mapping, auto composition, auto id>
+requires SegMapping<S, F, mapping, composition, id>
 struct DualSegmentTree {
   public:
     DualSegmentTree() : _n(0) {}

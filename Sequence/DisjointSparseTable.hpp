@@ -1,7 +1,10 @@
 #pragma once
 #include <bits/stdc++.h>
+#include "kusu_lib/concepts.hpp"
 namespace kusu_lib {
-template<class S, S (*op)(S, S), S (*e)()> struct DisjointSparseTable {
+template<class S, auto op, auto e>
+requires Monoid<S, op, e>
+struct DisjointSparseTable {
   private:
     int N;
     int h;
@@ -46,7 +49,7 @@ template<class S, S (*op)(S, S), S (*e)()> struct DisjointSparseTable {
         return op(T[p * N + l], T[p * N + r]);
     }
 
-    S prod_left(int l, int r){
+    S prod_left(int l, int r) {
         assert(0 <= l && l <= r && r <= N);
         if(l == r) return e();
         if(l + 1 == r) return _v[l];
@@ -55,7 +58,7 @@ template<class S, S (*op)(S, S), S (*e)()> struct DisjointSparseTable {
         return T[p * N + l];
     }
 
-    S prod_right(int l, int r){
+    S prod_right(int l, int r) {
         assert(0 <= l && l <= r && r <= N);
         if(l == r) return e();
         if(l + 1 == r) return e();

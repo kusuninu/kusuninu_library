@@ -1,8 +1,11 @@
 #pragma once
 #include <bits/stdc++.h>
+#include "kusu_lib/concepts.hpp"
 namespace kusu_lib {
 //from atcoder library
-template<class S, S (*op)(S, S), S (*e)()> struct SegmentTree {
+template<class S, auto op, auto e>
+requires Monoid<S, op, e>
+struct SegmentTree {
   public:
     SegmentTree() : SegmentTree(0) {}
     SegmentTree(int n) : SegmentTree(std::vector<S>(n, e())) {}
@@ -44,10 +47,12 @@ template<class S, S (*op)(S, S), S (*e)()> struct SegmentTree {
 
     S all_prod() { return d[1]; }
 
-    template<bool (*f)(S)> int max_right(int l) {
+    template<bool (*f)(S)>
+    int max_right(int l) {
         return max_right(l, [](S x) { return f(x); });
     }
-    template<class F> int max_right(int l, F f) {
+    template<class F>
+    int max_right(int l, F f) {
         assert(0 <= l && l <= _n);
         assert(f(e()));
         if(l == _n) return _n;
@@ -71,10 +76,12 @@ template<class S, S (*op)(S, S), S (*e)()> struct SegmentTree {
         return _n;
     }
 
-    template<bool (*f)(S)> int min_left(int r) {
+    template<bool (*f)(S)>
+    int min_left(int r) {
         return min_left(r, [](S x) { return f(x); });
     }
-    template<class F> int min_left(int r, F f) {
+    template<class F>
+    int min_left(int r, F f) {
         assert(0 <= r && r <= _n);
         assert(f(e()));
         if(r == 0) return 0;

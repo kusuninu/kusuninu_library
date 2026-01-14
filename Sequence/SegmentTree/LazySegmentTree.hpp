@@ -1,9 +1,10 @@
 #pragma once
 #include <bits/stdc++.h>
+#include "kusu_lib/concepts.hpp"
 namespace kusu_lib {
 //from atcoder library
-template<class S, S (*op)(S, S), S (*e)(), class F, S (*mapping)(F, S), F (*composition)(F, F),
-         F (*id)()>
+template<class S, auto op, auto e, class F, auto mapping, auto composition, auto id>
+requires LazySegMonoidMapping<S, op, e, F, mapping, composition, id>
 struct LazySegmentTree {
   public:
     LazySegmentTree() : LazySegmentTree(0) {}
@@ -94,10 +95,12 @@ struct LazySegmentTree {
         }
     }
 
-    template<bool (*g)(S)> int max_right(int l) {
+    template<bool (*g)(S)>
+    int max_right(int l) {
         return max_right(l, [](S x) { return g(x); });
     }
-    template<class G> int max_right(int l, G g) {
+    template<class G>
+    int max_right(int l, G g) {
         assert(0 <= l && l <= _n);
         assert(g(e()));
         if(l == _n) return _n;
@@ -123,10 +126,12 @@ struct LazySegmentTree {
         return _n;
     }
 
-    template<bool (*g)(S)> int min_left(int r) {
+    template<bool (*g)(S)>
+    int min_left(int r) {
         return min_left(r, [](S x) { return g(x); });
     }
-    template<class G> int min_left(int r, G g) {
+    template<class G>
+    int min_left(int r, G g) {
         assert(0 <= r && r <= _n);
         assert(g(e()));
         if(r == 0) return 0;

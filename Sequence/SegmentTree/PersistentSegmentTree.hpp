@@ -1,7 +1,10 @@
 #pragma once
 #include <bits/stdc++.h>
+#include "kusu_lib/concepts.hpp"
 namespace kusu_lib {
-template<class S, S (*op)(S, S), S (*e)()> struct PersistentSegmentTree {
+template<class S, auto op, auto e>
+requires Monoid<S, op, e>
+struct PersistentSegmentTree {
   public:
     PersistentSegmentTree() : PersistentSegmentTree(0) {}
     PersistentSegmentTree(int N) : PersistentSegmentTree(std::vector<S>(N, e())) {}
@@ -32,8 +35,7 @@ template<class S, S (*op)(S, S), S (*e)()> struct PersistentSegmentTree {
         int h = height - 1;
         while(h >= 0) {
             if(p >> h & 1) pos = child[pos].second;
-            else
-                pos = child[pos].first;
+            else pos = child[pos].first;
             h--;
         }
         return d[pos];
@@ -53,7 +55,8 @@ template<class S, S (*op)(S, S), S (*e)()> struct PersistentSegmentTree {
                 dfs(child[pos].second, h - 1);
                 child.emplace_back(child[pos].first, d.size() - 1);
                 d.push_back(update(d.size()));
-            } else {
+            }
+            else {
                 dfs(child[pos].first, h - 1);
                 child.emplace_back(d.size() - 1, child[pos].second);
                 d.push_back(update(d.size()));
@@ -79,7 +82,8 @@ template<class S, S (*op)(S, S), S (*e)()> struct PersistentSegmentTree {
             if(l >> h & 1) {
                 lpos = child[lpos].second;
                 rpos = child[rpos].second;
-            } else {
+            }
+            else {
                 lpos = child[lpos].first;
                 rpos = child[rpos].first;
             }
@@ -94,9 +98,8 @@ template<class S, S (*op)(S, S), S (*e)()> struct PersistentSegmentTree {
                 lsum = op(d[lpos], lsum);
                 break;
             }
-            if(l >> lh & 1) {
-                lpos = child[lpos].second;
-            } else {
+            if(l >> lh & 1) { lpos = child[lpos].second; }
+            else {
                 lsum = op(d[child[lpos].second], lsum);
                 lpos = child[lpos].first;
             }
@@ -107,9 +110,8 @@ template<class S, S (*op)(S, S), S (*e)()> struct PersistentSegmentTree {
             if(r >> rh & 1) {
                 rsum = op(rsum, d[child[rpos].first]);
                 rpos = child[rpos].second;
-            } else {
-                rpos = child[rpos].first;
             }
+            else { rpos = child[rpos].first; }
             rh--;
         }
         return op(lsum, rsum);

@@ -1,11 +1,11 @@
 #pragma once
 #include <bits/stdc++.h>
+#include "kusu_lib/concepts.hpp"
 namespace kusu_lib {
 //altered lazysegtree from atcoder library
 //s.fail must be false if length of s is 1
-template<class S, S (*op)(S, S), S (*e)(), class F, S (*mapping)(F, S), F (*composition)(F, F),
-         F (*id)()>
-requires requires(S s) {
+template<class S, auto op, auto e, class F, auto mapping, auto composition, auto id>
+requires LazySegMonoidMapping<S, op, e, F, mapping, composition, id> && requires(S s) {
     { s.fail } -> std::same_as<bool&>;
 }
 struct SegmentTreeBeats {
@@ -98,10 +98,12 @@ struct SegmentTreeBeats {
         }
     }
 
-    template<bool (*g)(S)> int max_right(int l) {
+    template<bool (*g)(S)>
+    int max_right(int l) {
         return max_right(l, [](S x) { return g(x); });
     }
-    template<class G> int max_right(int l, G g) {
+    template<class G>
+    int max_right(int l, G g) {
         assert(0 <= l && l <= _n);
         assert(g(e()));
         if(l == _n) return _n;
@@ -127,10 +129,12 @@ struct SegmentTreeBeats {
         return _n;
     }
 
-    template<bool (*g)(S)> int min_left(int r) {
+    template<bool (*g)(S)>
+    int min_left(int r) {
         return min_left(r, [](S x) { return g(x); });
     }
-    template<class G> int min_left(int r, G g) {
+    template<class G>
+    int min_left(int r, G g) {
         assert(0 <= r && r <= _n);
         assert(g(e()));
         if(r == 0) return 0;

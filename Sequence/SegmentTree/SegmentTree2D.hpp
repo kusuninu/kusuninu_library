@@ -1,7 +1,10 @@
 #pragma once
 #include <bits/stdc++.h>
+#include "kusu_lib/concepts.hpp"
 namespace kusu_lib {
-template<class S, S (*op)(S, S), S (*e)()> struct SegmentTree2D {
+template<class S, auto op, auto e>
+requires Monoid<S, op, e>
+struct SegmentTree2D {
   public:
     SegmentTree2D() : H(0), W(0) {}
     SegmentTree2D(int H, int W) : H(H), W(W) {
@@ -87,8 +90,8 @@ template<class S, S (*op)(S, S), S (*e)()> struct SegmentTree2D {
     S* d;
     int h_s;
     int w_s;
-    int index(int h, int w) const{ return h * 2 * w_s + w; }
-    void w_prod(int i, int l, int r, S& res) const{
+    int index(int h, int w) const { return h * 2 * w_s + w; }
+    void w_prod(int i, int l, int r, S& res) const {
         while(l < r) {
             if(l & 1) {
                 res = op(res, d[index(i, l)]);

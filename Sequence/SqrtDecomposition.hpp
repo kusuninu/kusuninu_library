@@ -1,7 +1,10 @@
 #pragma once
 #include <bits/stdc++.h>
+#include "kusu_lib/concepts.hpp"
 namespace kusu_lib {
-template<class S, S (*op)(S, S), S (*e)()> struct SqrtDecomposition {
+template<class S, auto op, auto e>
+requires Monoid<S, op, e>
+struct SqrtDecomposition {
   public:
     SqrtDecomposition() : SqrtDecomposition(1) {}
 
