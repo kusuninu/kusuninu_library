@@ -5,14 +5,14 @@ namespace kusu_lib {
 struct PartiallyPersistentDSU {
   private:
     const int _N;
-    int* par;
-    int* updated;
-    int* _size;
+    std::vector<int> par;
+    std::vector<int> updated;
+    std::vector<int> _size;
     std::vector<std::vector<std::pair<int, int>>> size_changed;
     const int inf = 1 << 30;
     int now = 0;
-    int* leader_memo;
-    int* size_memo;
+    std::vector<int> leader_memo;
+    std::vector<int> size_memo;
 
     int find_par(int t, int x) {
         if(t < updated[x]) return x;
@@ -24,18 +24,12 @@ struct PartiallyPersistentDSU {
 
     PartiallyPersistentDSU(int N) : _N(N) {
         assert(_N >= 0);
-        par = new int[_N];
-        updated = new int[_N];
-        _size = new int[_N];
-        size_changed.resize(_N);
-        leader_memo = new int[_N];
-        size_memo = new int[_N];
-        for(int i = 0; i < _N; i++) {
-            par[i] = -1;
-            updated[i] = inf;
-            _size[i] = 1;
-            size_changed[i].emplace_back(0, 1);
-        }
+        par.resize(_N, -1);
+        updated.resize(_N, inf);
+        _size.resize(_N, 1);
+        size_changed.resize(_N, std::vector<std::pair<int, int>>{{0, 1}});
+        leader_memo.resize(_N);
+        size_memo.resize(_N);
     }
 
     int merge(int x, int y) {
@@ -64,8 +58,7 @@ struct PartiallyPersistentDSU {
 
     int size(int t, int x) {
         assert(0 <= t && t <= now && 0 <= x && x < _N);
-        return std::lower_bound(size_changed[x].begin(), size_changed[x].end(),
-                                std::make_pair(t, inf))
+        return std::lower_bound(size_changed[x].begin(), size_changed[x].end(), std::make_pair(t, inf))
             ->second;
     }
 
@@ -81,8 +74,7 @@ struct PartiallyPersistentDSU {
         std::vector<std::vector<int>> res(_N);
         for(int i = 0; i < _N; i++) res[i].reserve(size_memo[i]);
         for(int i = 0; i < _N; i++) res[i].push_back(leader_memo[i]);
-        res.erase(std::remove_if(res.begin(), res.end(), [](const auto& v) { return v.empty(); }),
-                  res.end());
+        res.erase(std::remove_if(res.begin(), res.end(), [](const auto& v) { return v.empty(); }), res.end());
         return res;
     }
 };

@@ -20,6 +20,10 @@ template<typename T = long long> struct Coordinate_Compression {
         if(!initialized) init();
         return xs[i];
     }
+    bool contains(T x) {
+        if(!initialized) init();
+        return std::binary_search(xs.begin(),xs.end(),x);
+    }
     int size() {
         if(!initialized) init();
         return xs.size();
