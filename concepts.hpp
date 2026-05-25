@@ -10,7 +10,7 @@ concept Monoid = std::copyable<S> && requires(S a, S b) {
 
 template<class S, class F, auto mapping, auto composition, auto id>
 concept SegMapping = std::copyable<S> && std::copyable<F> && requires(S a, F f, F g) {
-    { mapping(a) } -> std::same_as<S>;
+    { mapping(f,a) } -> std::same_as<S>;
     { composition(f, g) } -> std::same_as<F>;
     { id() } -> std::same_as<F>;
 };

@@ -97,6 +97,7 @@ class RollingHash {
     }
 
     static ull CalcHash(const std::vector<ull>& S) {
+        set_base();
         ull res = 0;
         for(int i = 0; i < (int)S.size(); i++) {
             res = Mul(res, base);

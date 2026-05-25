@@ -1,5 +1,4 @@
 #pragma once
-#include "IntegerAlgorithm.hpp"
 #include <bits/stdc++.h>
 namespace kusu_lib {
 struct LinearSieve {
@@ -70,15 +69,13 @@ struct LinearSieve {
         std::vector<int> res = {1};
         std::stack<int> st;
         for(auto pf: factors) {
-            for(int a: res) {
+            int r = res.size();
+            for(int i = 0; i < r; i++) {
+                int a = res[i];
                 for(int i = 0; i < pf.second; i++) {
                     a *= pf.first;
-                    st.push(a);
+                    res.push_back(a);
                 }
-            }
-            while(!st.empty()) {
-                res.push_back(st.top());
-                st.pop();
             }
         }
         return res;
@@ -99,15 +96,6 @@ struct LinearSieve {
             res *= c + 1;
         }
         return res;
-    }
-
-    std::vector<long long> pow_list(long long k, long long mod) {
-        std::vector<long long> res(_N + 1);
-        for(auto p: primes) res[p] = mod_pow((long long)p, k, mod);
-        for(int i = 1; i <= _N; i++) {
-            if(res[i] == 0) res[i] = res[min_factor[i]] * res[i / min_factor[i]] % mod;
-        }
-        
     }
 
     template<class T> void sum_over_divisors(std::vector<T>& A) {

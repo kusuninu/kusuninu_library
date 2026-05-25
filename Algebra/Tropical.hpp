@@ -1,56 +1,68 @@
 #pragma once
 #include <bits/stdc++.h>
 namespace kusu_lib {
-template<typename T, bool IsMinPlus = true> struct Tropical {
-    T val;
-    bool is_inf;
-
+template<typename T, bool IsMinPlus = true>
+struct Tropical {
+  private:
+    T _val;
+    bool _is_inf;
+  public:
     static constexpr bool has_numeric_limits = std::numeric_limits<T>::is_specialized;
 
     Tropical() {
         if constexpr(has_numeric_limits) {
-            val = std::numeric_limits<T>::max() / 2;
-            is_inf = false;
+            _val = std::numeric_limits<T>::max() / 2;
+            _is_inf = false;
         }
         else {
-            val = T();
-            is_inf = true;
+            _val = T();
+            _is_inf = true;
         }
     }
 
-    Tropical(T v) : val(v), is_inf(false) {}
+    Tropical(T v) : _val(v), _is_inf(false) {}
 
     Tropical(const Tropical& other) {
-        val = other.val;
-        is_inf = other.is_inf;
+        _val = other._val;
+        _is_inf = other._is_inf;
     }
+
+    T val(){return _val;}
+
+    bool is_inf(){
+        if constexpr(has_numeric_limits) {
+            return _val >= std::numeric_limits<T>::max() / 4;
+        }
+        else return _is_inf;
+    }
+    
 
     Tropical& operator=(const Tropical& other) {
         if(this != &other) {
-            val = other.val;
-            is_inf = other.is_inf;
+            _val = other._val;
+            _is_inf = other._is_inf;
         }
         return *this;
     }
 
     Tropical& operator=(const T& other) {
-        val = other;
+        _val = other;
         return *this;
     }
 
     Tropical& operator+=(const Tropical& other) {
         if constexpr(IsMinPlus) {
-            if constexpr(has_numeric_limits) { val = std::min(val, other.val); }
+            if constexpr(has_numeric_limits) { _val = std::min(_val, other._val); }
             else {
-                if(is_inf) *this = other;
-                else if(!other.is_inf) val = std::min(val, other.val);
+                if(_is_inf) *this = other;
+                else if(!other._is_inf) _val = std::min(_val, other._val);
             }
         }
         else {
-            if constexpr(has_numeric_limits) { val = std::max(val, other.val); }
+            if constexpr(has_numeric_limits) { _val = std::max(_val, other._val); }
             else {
-                if(is_inf) *this = other;
-                else if(!other.is_inf) val = std::max(val, other.val);
+                if(_is_inf) *this = other;
+                else if(!other._is_inf) _val = std::max(_val, other._val);
             }
         }
         return *this;
@@ -58,17 +70,14 @@ template<typename T, bool IsMinPlus = true> struct Tropical {
 
     Tropical& operator*=(const Tropical& other) {
         if constexpr(has_numeric_limits) {
-            if(val >= std::numeric_limits<T>::max() / 4 ||
-               other.val >= std::numeric_limits<T>::max() / 4) {
+            if(_val >= std::numeric_limits<T>::max() / 4 || other._val >= std::numeric_limits<T>::max() / 4) {
                 *this = Tropical();
             }
-            else { val += other.val; }
+            else { _val += other._val; }
         }
         else {
-            if(is_inf || other.is_inf) {
-                *this = Tropical();
-            }
-            else { val += other.val; }
+            if(_is_inf || other._is_inf) { *this = Tropical(); }
+            else { _val += other._val; }
         }
         return *this;
     }
@@ -78,13 +87,13 @@ template<typename T, bool IsMinPlus = true> struct Tropical {
     Tropical operator*(const Tropical& other) const { return Tropical(*this) *= other; }
 
     bool operator==(const Tropical& other) const {
-        return (is_inf && other.is_inf) || (!is_inf && !other.is_inf && val == other.val);
+        return (_is_inf && other._is_inf) || (!_is_inf && !other._is_inf && _val == other._val);
     }
     bool operator!=(const Tropical& other) const { return !(*this == other); }
     bool operator<(const Tropical& other) const {
-        if(is_inf) return !other.is_inf;
-        if(other.is_inf) return false;
-        return val < other.val;
+        if(_is_inf) return !other._is_inf;
+        if(other._is_inf) return false;
+        return _val < other._val;
     }
     bool operator>(const Tropical& other) const { return other < *this; }
     bool operator<=(const Tropical& other) const { return !(other < *this); }
@@ -92,12 +101,12 @@ template<typename T, bool IsMinPlus = true> struct Tropical {
 
     friend std::ostream& operator<<(std::ostream& os, const Tropical& x) {
         if constexpr(has_numeric_limits) {
-            if(x.val >= std::numeric_limits<T>::max() / 4) os << "INF";
-            else os << x.val;
+            if(x._val >= std::numeric_limits<T>::max() / 4) os << "INF";
+            else os << x._val;
         }
         else {
-            if(x.is_inf) os << "INF";
-            else os << x.val;
+            if(x._is_inf) os << "INF";
+            else os << x._val;
         }
         return os;
     }
@@ -116,5 +125,8 @@ template<typename T, bool IsMinPlus = true> struct Tropical {
         }
         return is;
     }
+
+    static Tropical zero() { return Tropical(); }
+    static Tropical one() { return Tropical(T(0)); }
 };
 }//namespace kusu_lib
